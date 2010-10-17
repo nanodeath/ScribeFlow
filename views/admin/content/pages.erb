@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="http://960ls.atomidata.com/static/cssserve/9/8/6/3/9/98639.css">
+	</head>
+	<body>
+		<div id="header" class="container_12"></div>
+
+		<div id="content" class="container_12">
+			<div class="grid_4">
+				<ul>
+					<li><a href="#">Home</a></li>
+					<li><a href="#">About</a></li>
+					<li><a href="#">Contact</a></li>
+					<li class="separator"></li>
+					<li><a href="#">Master</a></li>
+				</ul>
+			</div>
+			<div class="grid_4">
+				<button>Create New</button>
+				
+				<!-- after clicking Create New -->
+				<div>
+					<form>
+						<p>
+							<label>Name:</label>
+							<input></input>
+						</p>
+						<p>
+							<label>Parent:</label>
+							<select>
+								<option>Foo
+							</select>
+						</p>
+						<p>
+							<ul>
+								<li><input type="radio" name="template_type">Master</input></li>
+								<li><input type="radio" name="template_type">Pre-built template</input></li>
+								<li><input type="radio" name="template_type" checked>Blank</input></li>
+							</ul>
+							<!-- if a new item -->
+							<input type="submit" value="Create"/>
+							<!-- if an existing item -->
+							<input type="submit" vaue="Save"/>
+						</p>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<div id="footer" class="container_12"></div>
+	</body>
+</html>

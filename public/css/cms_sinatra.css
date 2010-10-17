@@ -1,0 +1,57 @@
+.header {
+	/*position: fixed;*/
+	top: 0;
+	text-align: center;
+	width: 80%;
+	border:1px solid black;
+}
+ul, ol, li {
+	display:inline;
+}
+
+.container_12 {
+	border: 1px dashed black;
+}
+.grid_1, 
+.grid_2, 
+.grid_3, 
+.grid_4, 
+.grid_5, 
+.grid_6, 
+.grid_7, 
+.grid_8, 
+.grid_9, 
+.grid_10, 
+.grid_11, 
+.grid_12 {
+	border: 1px dotted black;
+}
+.top {
+	padding-top:2em;
+}
+.add_block {
+	width:64px;
+	height:64px;
+	border:1px solid black;
+}
+.new_slot_left {
+	border-left: 4px solid red;
+	/*margin-left: -3px; */
+}
+.new_slot_right {
+	border-right: 4px solid red;
+}
+.new_slot_top {
+	border-top: 4px solid red;
+	margin-top: -3px;
+}
+.new_slot_bottom {
+	border-bottom: 4px solid red;
+}
+.mode_add_section .container_12 {
+	min-height: 50px;
+}
+
+div.files {
+	//width: 200px;
+}

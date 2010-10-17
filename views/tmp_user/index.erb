@@ -1,0 +1,188 @@
+<!doctype html>
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="http://960ls.atomidata.com/static/cssserve/9/8/6/3/9/98639.css">
+		<link rel="stylesheet" type="text/css" href="/css/ui-lightness/jquery-ui-1.8.5.custom.css"/>
+		<link rel="stylesheet" type="text/css" href="/css/cms_sinatra.css"/>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+		<script src="/js/underscore.js"></script>
+		<script src="/js/backbone.js"></script>
+		<script src="/js/jquery/jstree/jquery.jstree.js" defer async></script>
+		<script src="/js/jquery/jstree/_lib/jquery.cookie.js" defer async></script>
+		<script>
+			$(function(){
+				/*
+				$(".container_12").each(function(){
+					$(this).droppable({
+						over: function(event, ui){
+							console.log("Started logging");
+							console.log("event is %o, ui is %o, this is %o", event, ui, this);
+							$(ui.draggable).bind("drag", {droppable: this}, track);
+						},
+						out: function(event, ui){
+							$(ui.draggable).unbind("drag", track);
+							console.log("Stopped logging");
+							$(this).removeClass("new_slot_left").removeClass("new_slot_top").removeClass("new_slot_right").removeClass("new_slot_bottom");
+						}
+					})
+				});
+				*/
+				
+				var track = function(event){
+					var elLeft = event.pageX, 
+						elTop = event.pageY;
+					var container = event.data.container;
+					var cOffset = $(container).offset();
+					var cLeft = cOffset.left,
+						cTop = cOffset.top,
+						cRight = cOffset.left + $(container).width(),
+						cBottom = cOffset.top + $(container).height();
+					var closest, closestDistance = Infinity;
+					var pairs = [[elLeft, cLeft, "left"], [elTop, cTop, "top"], [elLeft, cRight, "right"], [elTop, cBottom, "bottom"]];
+					_(pairs).map(function(n){
+						var dist = Math.abs(n[1] - n[0]);
+						if(dist < closestDistance){
+							closest = n[2];
+							closestDistance = dist;
+						}
+					});
+					var desiredClass = "new_slot_" + closest;
+					if(!$(container).hasClass(desiredClass)){
+						$(container).removeClass("new_slot_left").removeClass("new_slot_top").removeClass("new_slot_right").removeClass("new_slot_bottom").addClass(desiredClass);
+					}
+					console.log(closest);
+				}
+				
+				var SectionManager = new function(){
+					var mode;
+					this.getMode = function(){
+						return mode;
+					}
+					this.setMode = function(newMode){
+						// deactivate old mode
+						switch(mode){
+						case "add_section":
+							$(".container_12").unbind("mouseenter mouseleave mousemove click");
+							break;
+						}
+						
+						$(document.body).removeClass("mode_" + mode);
+						mode = newMode;
+						$(document.body).addClass("mode_" + mode);
+						console.log("mode %s activated", mode);
+						
+						// activate new mode
+						switch(mode){
+						case "add_section":
+							$(".container_12").mouseenter(function(){
+								$(this).mousemove({container: this}, track).click(function(){
+									console.log("click");
+								});
+							});
+							$(".container_12").mouseleave(function(){
+								$(this).removeClass("new_slot_left").removeClass("new_slot_top").removeClass("new_slot_right").removeClass("new_slot_bottom").unbind("mousemove");
+							});
+							break;
+						}
+					};
+					this.setMode("default");
+				};
+				var TemplateManager = new function(){
+					var TM = this;
+					var cache = {};
+					this.get = function(url, callback){
+						var t = cache[url];
+						if(t){
+							callback.call(this, t);
+						} else {
+							$.get(url, function(t){
+								cache[url] = t;
+								callback.call(TM, t);
+							});
+						}
+					};
+					this.clear = function(key){
+						delete cache[key];
+					};
+					this.clearAll = function(){
+						cache = {};
+					};
+				};
+				$("#add_section").click(function(){
+					switch(SectionManager.getMode()){
+					case "default":
+						SectionManager.setMode("add_section");
+						break;
+					case "add_section":
+						SectionManager.setMode("default");
+						break;							
+					}
+				});
+				$("#main_menu a.content").click(function(){
+					var html = "<li><a href='#' id='pages_menu'>Pages</a></li>";
+					html += "<li><a href='#' id='documents_menu'>Documents</a></li>";
+					$("#sub_menu").slideUp(function(){
+						$(this).html(html).slideDown();
+						
+						$("#pages_menu").click(function(){
+							TemplateManager.get("/admin/content/pages_dialog", function(templ){
+								console.log(templ);
+								$(templ).dialog({
+									modal: true,
+									open: function(){
+										$("div.files", this).jstree({
+											"json_data" : {
+												"data" : [
+													{ 
+														"data" : "A node", 
+														"children" : [ "Child 1", "Child 2" ]
+													},
+													{ 
+														"attr" : { "id" : "li.node.id" }, 
+														"data" : { 
+															"title" : "Long format demo", 
+															"attr" : { "href" : "#" } 
+														} 
+													}
+												]
+											},
+											"plugins" : [ "json_data", "themeroller" ]
+										});
+									},
+									width: 600
+								});
+							});
+						});
+					});
+				});
+			});
+		</script>
+	</head>
+	<body class="edit-mode">
+		<!-- EDIT MODE -->
+		<div style="text-align:center">
+		<div class="header">
+			<ul id="main_menu">
+				<li><a href="#">Admin Central</a></li>
+				<li><a href="#" class="content">Content</a></li>
+				<li><a href="#"><b>Layout</b></a></li>
+			</ul>
+			<br/>
+			<ul id="sub_menu">
+				<li><button id="add_section">Add Section</button></li>
+			</ul>
+		</div>
+		</div>
+		<!-- END EDIT -->
+		<div class="top"></div>
+		<div data-slot="1" class="container_12" style="height:200px">
+			<div class="grid_12 alpha omega">Here we have the header</div>
+		</div>
+		<div class="container_12">
+			<div data-slot="2" class="grid_4 alpha" style="height:200px">Left column</div>
+			<div data-slot="3" class="grid_8 omega" style="height:200px">Main content</div>
+		</div>
+		<div data-slot="4" class="container_12" style="height:200px">Bottom section</div>
+	</body>
+</html>
