@@ -1,34 +1,21 @@
 <!doctype html>
 <html>
 	<head>
-		<link rel="stylesheet" type="text/css" href="http://960ls.atomidata.com/static/cssserve/9/8/6/3/9/98639.css">
+		<link rel="stylesheet" type="text/css" href="/css/grid.css">
 		<link rel="stylesheet" type="text/css" href="/css/ui-lightness/jquery-ui-1.8.5.custom.css"/>
 		<link rel="stylesheet" type="text/css" href="/css/cms_sinatra.css"/>
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
-		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+		<script src="/js/jquery-1.4.3.min.js"></script>
+		<script src="/js/jquery-ui-1.8.5.min.js"></script>
 		<script src="/js/underscore.js"></script>
 		<script src="/js/backbone.js"></script>
+		<script src="/js/underscore.strings.js"></script>
+		<script src="/js/SectionManager.js"></script>
+		<script src="/js/TemplateManager.js"></script>
+		<script src="/js/Page.js"></script>
 		<script src="/js/jquery/jstree/jquery.jstree.js" defer async></script>
 		<script src="/js/jquery/jstree/_lib/jquery.cookie.js" defer async></script>
 		<script>
 			$(function(){
-				/*
-				$(".container_12").each(function(){
-					$(this).droppable({
-						over: function(event, ui){
-							console.log("Started logging");
-							console.log("event is %o, ui is %o, this is %o", event, ui, this);
-							$(ui.draggable).bind("drag", {droppable: this}, track);
-						},
-						out: function(event, ui){
-							$(ui.draggable).unbind("drag", track);
-							console.log("Stopped logging");
-							$(this).removeClass("new_slot_left").removeClass("new_slot_top").removeClass("new_slot_right").removeClass("new_slot_bottom");
-						}
-					})
-				});
-				*/
-				
 				var track = function(event){
 					var elLeft = event.pageX, 
 						elTop = event.pageY;
@@ -54,61 +41,8 @@
 					console.log(closest);
 				}
 				
-				var SectionManager = new function(){
-					var mode;
-					this.getMode = function(){
-						return mode;
-					}
-					this.setMode = function(newMode){
-						// deactivate old mode
-						switch(mode){
-						case "add_section":
-							$(".container_12").unbind("mouseenter mouseleave mousemove click");
-							break;
-						}
-						
-						$(document.body).removeClass("mode_" + mode);
-						mode = newMode;
-						$(document.body).addClass("mode_" + mode);
-						console.log("mode %s activated", mode);
-						
-						// activate new mode
-						switch(mode){
-						case "add_section":
-							$(".container_12").mouseenter(function(){
-								$(this).mousemove({container: this}, track).click(function(){
-									console.log("click");
-								});
-							});
-							$(".container_12").mouseleave(function(){
-								$(this).removeClass("new_slot_left").removeClass("new_slot_top").removeClass("new_slot_right").removeClass("new_slot_bottom").unbind("mousemove");
-							});
-							break;
-						}
-					};
-					this.setMode("default");
-				};
-				var TemplateManager = new function(){
-					var TM = this;
-					var cache = {};
-					this.get = function(url, callback){
-						var t = cache[url];
-						if(t){
-							callback.call(this, t);
-						} else {
-							$.get(url, function(t){
-								cache[url] = t;
-								callback.call(TM, t);
-							});
-						}
-					};
-					this.clear = function(key){
-						delete cache[key];
-					};
-					this.clearAll = function(){
-						cache = {};
-					};
-				};
+
+				
 				$("#add_section").click(function(){
 					switch(SectionManager.getMode()){
 					case "default":
@@ -126,31 +60,133 @@
 						$(this).html(html).slideDown();
 						
 						$("#pages_menu").click(function(){
-							TemplateManager.get("/admin/content/pages_dialog", function(templ){
+							TemplateManager.get("/admin/content/pages_dialog/main", function(templ){
+								templ = templ();
 								console.log(templ);
-								$(templ).dialog({
+
+								var pages = new Pages();
+								pages.bind("add", function(page){
+									var parent_id = page.get("parent");
+									if(parent_id){
+										var parent = pages.get(parent_id);
+										parent.addChild(page);
+									}
+								});
+								pages.add([
+									{
+										"id": 1,
+										"name": "Page 1"
+									},
+									{
+										"id": 2,
+										"name": "Page 2"
+									},
+									{
+										"id": 3,
+										"name": "Page 2a",
+										"parent": 2
+									}
+								]);
+								var topLevelPages = pages.filter(function(page){
+									return !page.get("parent");
+								});
+								var processPage = function(page){
+									var ret = {
+										"data": {
+											"title": page.get("name"),
+											"attr": {"data-page-id": page.id}
+										}
+									};
+									var children = page.get("children");
+									if(!_.isEmpty(children)){
+										ret.children = _(children).map(processPage);
+									}
+									return ret;
+								}
+								var jstreeData = _(topLevelPages).map(processPage);
+								jstreeData.push({
+									"data": {
+										"title": "Masters",
+										"attr": {"data-canDelete": false}
+									}
+								});
+								
+								$("<div>" + templ + "</div>").dialog({
 									modal: true,
 									open: function(){
-										$("div.files", this).jstree({
+										console.log("this is %o and div.files is %o", this, $("div.files", this));
+										// initialize tree
+										var tree = $("div.files", this).jstree({
 											"json_data" : {
-												"data" : [
-													{ 
-														"data" : "A node", 
-														"children" : [ "Child 1", "Child 2" ]
-													},
-													{ 
-														"attr" : { "id" : "li.node.id" }, 
-														"data" : { 
-															"title" : "Long format demo", 
-															"attr" : { "href" : "#" } 
-														} 
-													}
-												]
+												"data" : jstreeData
 											},
-											"plugins" : [ "json_data", "themeroller" ]
+											"ui": {
+												"select_limit": 1
+											},
+											"plugins" : [ "json_data", "themeroller", "crrm", "ui", "unique" ]
+										});
+										// initialize buttons
+										var file_panel = $("div.file_panel", this);
+										file_panel.delegate("#create_new_page,#create_new_child_page", "click", function(e){
+											tree.jstree("create",undefined, undefined, "New page");
+											e.preventDefault();
+											return false;
+										});
+										// click node behavior
+										var selectedNode = null;
+
+										tree.bind("rename_node.jstree", function(e, data){
+											console.log("node %o renamed", data.rslt.obj[0]);
+											var anchor = $(data.rslt.obj[0]).children("a");
+											if(!anchor.attr("data-page-id")){
+												var text = anchor.text();
+												var parentId = anchor.closest("li").parent().closest("li").children("a").attr("data-page-id");
+												var page = new Page({
+													"name": _(text).trim(),
+													"parent": parseInt(parentId)
+												});
+												pages.add(page);
+												anchor.attr("data-page-id", page.cid);
+											}
+										});
+
+										tree.bind("select_node.jstree", function(e, data){
+											// this api sucks.  this _should_ be data.result.
+											var node = data.rslt.obj[0];
+											var anchor = $(node).children("a");
+											var node_name = _(anchor.text()).trim();
+											var can_delete = anchor.data("canDelete");
+											var id = anchor.attr("data-page-id");
+											var page;
+											if(id){
+												if(_(id).startsWith("c")){
+													page = pages.getByCid(id);
+												} else {
+													page = pages.get(id);
+												}
+											}
+											var parent;
+											if(page){
+												parent = pages.get(page.get("parent"));
+											}
+											
+											if(node != selectedNode){
+												selectedNode = node;
+												console.log("selected node! %o", node);
+												
+												TemplateManager.get("/admin/content/pages_dialog/edit_node", function(template){
+													var result = template({id: id, name: node_name, parent: (parent && parent.get("name")	), can_delete: can_delete});
+													file_panel.html(result);
+												});
+											} else {
+												selectedNode = null;
+												console.log("deselected node! %o", node);
+												tree.jstree("deselect_all");
+											}
 										});
 									},
-									width: 600
+									width: 600,
+									resizable: false
 								});
 							});
 						});

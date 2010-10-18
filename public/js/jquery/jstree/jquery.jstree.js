@@ -458,7 +458,7 @@
 				if(strict) { return (obj.prevAll("li").length > 0) ? obj.prevAll("li:eq(0)") : false; }
 
 				if(obj.prev("li").length) {
-					obj = obj.prev("li").eq(0);
+					obj = obj.renameprev("li").eq(0);
 					while(obj.hasClass("jstree-open")) { obj = obj.children("ul:eq(0)").children("li:last"); }
 					return obj;
 				}

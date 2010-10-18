@@ -1,0 +1,26 @@
+<div>
+	<form>
+		id: <%= id %>
+		<p>
+			<button id="create_new_child_page">Create Child</button>
+		</p>
+		<p>
+			<label>Name:</label>
+			<input value="<%= name %>"></input>
+		</p>
+		<p>
+			<label>Parent:</label>
+			<input value="<%= parent %>" disabled></input>
+		</p>
+		<p>
+			<ul>
+				<li><input type="radio" name="template_type">Master</input></li>
+				<li><input type="radio" name="template_type">Pre-built template</input></li>
+				<li><input type="radio" name="template_type" checked>Blank</input></li>
+			</ul>
+		</p>
+		<p>
+			<button>Submit</button> <% if(can_delete !== false){ %><button>Delete</button><% } %>
+		</p>
+	</form>
+</div>

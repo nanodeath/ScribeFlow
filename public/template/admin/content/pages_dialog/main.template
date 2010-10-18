@@ -1,0 +1,5 @@
+<div class="file_panel" style="float:right">
+	<button id="create_new_page">Create New Page</button>
+</div>
+<div class="files">
+</div>
